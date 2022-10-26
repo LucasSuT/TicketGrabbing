@@ -38,17 +38,14 @@ def BuyTicket():
         wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody')))
         #elememt = driver.find_elements('xpath','/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr[2]')
         rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')
-        print(len(rows))
+        #print(len(rows))
         for row in rows :
             colums = row.find_elements(By.TAG_NAME, 'td')
-            for colum in colums :
-                print(colum.text)
+            CheckAreaAvailable(json_object["area"],colums)
     except:
         print('Buy Fail\n\n\n\n\n\n')
-        #return 1
         return 0
-    finally:
-        return 1
+    return 1
 
 
 def Login():
@@ -76,7 +73,18 @@ def Login():
     except:
         print('Login Fail\n\n\n\n\n\n')
         return 0
-    return 0
+    return 1
+
+def CheckAreaAvailable(json_array,elements):
+    for area in json_array:
+        if area == "down":
+            area="下"
+        try:
+            if area in elements[1].text and elements[3].text != "售完":
+                print("contain ",area," in ",elements[1].text)
+                return 1
+        except:
+            return 0
 
 def CheckVerifyCode():
     try:
@@ -111,13 +119,11 @@ while 1:
     '''
     for i in json_object:
         print(i, json_object[i])
-    '''
     while not Login() :
         print('login again')
     '''
     while not BuyTicket() :
         print('buy again')
-    '''
     print('Exit\n\n\n')
     driver.quit()
-    #break
+    break
