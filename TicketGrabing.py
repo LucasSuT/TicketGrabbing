@@ -8,6 +8,7 @@ from time import sleep
 import ddddocr
 import requests
 import base64
+import json
 
 #hide broser
 '''
@@ -21,8 +22,6 @@ option.add_argument('lang=zh_CN.UTF-8')
 #option.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
 driver =webdriver.Chrome(options=option)
 '''
-
-driver = webdriver.Chrome()
 
 def BuyTicket():
     #avoid over loading
@@ -46,38 +45,46 @@ def BuyTicket():
                 print(colum.text)
     except:
         print('Buy Fail\n\n\n\n\n\n')
-        sleep(5)
         #return 1
-        return 1
+        return 0
     finally:
-        print('Exit')
         return 1
 
 
 def Login():
+    driver.execute_script("window.stop()")
     driver.get('https://tix.fubonbraves.com/UTK0101_') #login page
     try:
         wait = WebDriverWait(driver, 10)
         wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="userbutton"]/img'))).click()
         account = driver.find_element('xpath','//*[@id="MASTER_ACCOUNT"]')
         account.clear()
-        account.send_keys("your account")
+        account.send_keys(json_object['account'])
         password = driver.find_element('xpath','//*[@id="MASTER_PASSWORD"]')
         password.clear()
-        password.send_keys("your password")
-        DownLoadVerifyCode()
+        password.send_keys(json_object['password'])
         verify = driver.find_element('xpath','//*[@id="MASTER_CHK"]')
+        DownLoadVerifyCode()
         verify.clear()
-        verify.send_keys(DecodeVerifyCode())
-        wait = WebDriverWait(driver, 10)
+        #verify.send_keys(DecodeVerifyCode())
+        verify.send_keys('test')
+        wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="popupuser"]/div/div[2]/div[3]/button[3]'))).click()
+        if not CheckVerifyCode():
+            print('verify fail')
+            return 0
     except:
         print('Login Fail\n\n\n\n\n\n')
-        sleep(5)
-        return 1
-    finally:
-        print('Login Pass')
         return 0
+    return 0
+
+def CheckVerifyCode():
+    try:
+        wait = WebDriverWait(driver, 1)
+        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[3]/div/button'))).click()
+    except: #cant capture alert represent verify success
+        return 1
+    return 0
 
 def DecodeVerifyCode():
     ocr = ddddocr.DdddOcr()
@@ -97,8 +104,20 @@ def DownLoadVerifyCode():
     with open("captcha_login.png", 'wb') as image:
         image.write(base64.b64decode(img_base64))
 
-while Login() :
-    print('again')
-while BuyTicket() :
-    input("Press Enter to continue.")
-#driver.quit()
+while 1:
+    driver = webdriver.Chrome()
+    jsonFile = open('config.json','r')
+    json_object = json.load(jsonFile)
+    '''
+    for i in json_object:
+        print(i, json_object[i])
+    '''
+    while not Login() :
+        print('login again')
+    '''
+    while not BuyTicket() :
+        print('buy again')
+    '''
+    print('Exit\n\n\n')
+    driver.quit()
+    #break
