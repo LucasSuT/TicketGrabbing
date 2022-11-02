@@ -30,9 +30,13 @@ def test():
         'https://tix.fubonbraves.com/UTK0205_?PERFORMANCE_ID=P00K619P&GROUP_ID=63&PERFORMANCE_PRICE_AREA_ID=P00K6CIG')
     wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located(
+        (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[2]/div[2]/div/button[2]'))).click()
+    wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="TBL"]/tbody')))
     rows = driver.find_elements(
         By.XPATH, '//*[@id="TBL"]/tbody/tr')
+    needSeat = 9
+    tempSeat = []
     seats = []
     for row in rows:
         colums = row.find_elements(By.TAG_NAME, 'td')
@@ -40,8 +44,31 @@ def test():
             if colum.get_attribute('title'):
                 seats.append(colum)
     seats.sort(key=lambda x: x.get_attribute('title'))
+    preRow = ""
+    preNumber = ""
+    ConsecutiveSeats = 1
     for seat in seats:
-        print(seat.get_attribute('title'))
+        next = seat.get_attribute('title')
+        tempSeat.append(seat)
+        rowStartIndex = next.index("-")
+        rowEndIndex = next.index("排")
+        rowNumber = next[rowStartIndex+1:rowEndIndex]
+        numberStartIndex = next.rindex("-")
+        numberEndIndex = next.rindex("號")
+        Number = next[numberStartIndex+1:numberEndIndex]
+        # print(next)
+        if preRow == rowNumber:
+            if int(preNumber) + 1 == int(Number):
+                ConsecutiveSeats += 1
+                if needSeat == ConsecutiveSeats:
+                    print("----------------------")
+                    for t in tempSeat:
+                        print(t)
+            else:
+                tempSeat = []
+                ConsecutiveSeats = 1
+        preRow = rowNumber
+        preNumber = Number
 
 
 def BuyTicket():
