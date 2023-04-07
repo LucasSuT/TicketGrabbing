@@ -26,16 +26,17 @@ driver =webdriver.Chrome(options=option)
 
 
 def test():
+    driver.get('https://google.com')
     driver.get(
-        'https://tix.fubonbraves.com/UTK0205_?PERFORMANCE_ID=P00K619P&GROUP_ID=63&PERFORMANCE_PRICE_AREA_ID=P00K6CIG')
+        'https://tix.fubonbraves.com/UTK0205_?PERFORMANCE_ID=P00KS5VK&GROUP_ID=40&PERFORMANCE_PRICE_AREA_ID=P00KSHKR')
     wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located(
-        (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[2]/div[2]/div/button[2]'))).click()
+        (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
     wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="TBL"]/tbody')))
     rows = driver.find_elements(
         By.XPATH, '//*[@id="TBL"]/tbody/tr')
-    needSeat = 9
+    needSeat = 8
     tempSeat = []
     seats = []
     for row in rows:
@@ -44,6 +45,8 @@ def test():
             if colum.get_attribute('title'):
                 seats.append(colum)
     seats.sort(key=lambda x: x.get_attribute('title'))
+    for seat in seats:
+        print(f"{seat.get_attribute('title')} ")
     preRow = ""
     preNumber = ""
     ConsecutiveSeats = 1
@@ -57,19 +60,19 @@ def test():
         numberEndIndex = next.rindex("號")
         Number = next[numberStartIndex+1:numberEndIndex]
         # print(next)
-        if preRow == rowNumber:
-            if int(preNumber) + 1 == int(Number):
-                ConsecutiveSeats += 1
-                if needSeat == ConsecutiveSeats:
-                    print("----------------------")
-                    for t in tempSeat:
-                        print(t)
-            else:
-                tempSeat = []
-                ConsecutiveSeats = 1
-        preRow = rowNumber
-        preNumber = Number
-
+        if preRow == rowNumber and int(preNumber) + 1 == int(Number):
+            ConsecutiveSeats += 1
+            preNumber = Number
+            if needSeat == ConsecutiveSeats:
+                print("----------------------")
+                for t in tempSeat:
+                    print(f"{t.get_attribute('title')} ")
+        else:
+            preRow = rowNumber
+            preNumber = Number
+            tempSeat = []
+            tempSeat.append(seat)
+            ConsecutiveSeats = 1
 
 def BuyTicket():
     # avoid over loading
