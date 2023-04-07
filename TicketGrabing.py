@@ -9,6 +9,7 @@ import ddddocr
 import requests
 import base64
 import json
+import ssl
 
 #hide broser
 '''
@@ -30,23 +31,39 @@ def BuyTicket():
     driver.get('https://tix.fubonbraves.com/UTK0101_')
     try:
         wait = WebDriverWait(driver, 5)
-        wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="calendar"]/table/tbody/tr[2]/td[6]'))).click()
+        wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="calendar"]/table/tbody/tr[5]/td[6]/a/span[1]/img'))).click() #日歷選擇
         wait = WebDriverWait(driver, 5)
-        wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="PerformanceListTable"]/table/tbody/tr[2]/td[5]'))).click()
+        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
+        #抓取所有可選擇區
         wait = WebDriverWait(driver, 5)
-
-        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody')))
-        #elememt = driver.find_elements('xpath','/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr[2]')
-        rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')
+        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')))
+        rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr') #抓取所有可選擇區
         #print(len(rows))
         for row in rows :
             colums = row.find_elements(By.TAG_NAME, 'td')
-            CheckAreaAvailable(json_object["area"],colums)
+            if CheckAreaAvailable(json_object["area"],colums):
+                print("click")
+                row.click()
+                SelectSeat()
     except:
         print('Buy Fail\n\n\n\n\n\n')
-        return 0
+        return 1
     return 1
 
+def SelectSeat():
+    # wait = WebDriverWait(driver, 5)
+    # wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="TBL"]/tbody')))
+    # rows = driver.find_elements(By.XPATH, '//*[@id="TBL"]/tbody/tr') #抓取每排座位
+    # print(len(rows))
+    # driver.back()
+    wait = WebDriverWait(driver, 5)
+    element = wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
+    wait = WebDriverWait(driver, 5)
+    element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="TBL"]/tbody/tr[2]/td[1]')))
+    driver.execute_script("arguments[0].click();", element)
+    print(element)
+    print(element.get_attribute('title'))
+    input("ddddddd")
 
 def Login():
     driver.execute_script("window.stop()")
@@ -63,8 +80,8 @@ def Login():
         verify = driver.find_element('xpath','//*[@id="MASTER_CHK"]')
         DownLoadVerifyCode()
         verify.clear()
-        #verify.send_keys(DecodeVerifyCode())
-        verify.send_keys('test')
+        verify.send_keys(DecodeVerifyCode())
+        # verify.send_keys('test')
         wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="popupuser"]/div/div[2]/div[3]/button[3]'))).click()
         if not CheckVerifyCode():
@@ -112,18 +129,19 @@ def DownLoadVerifyCode():
     with open("captcha_login.png", 'wb') as image:
         image.write(base64.b64decode(img_base64))
 
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
+driver = webdriver.Chrome(options=options)
 while 1:
-    driver = webdriver.Chrome()
     jsonFile = open('config.json','r')
     json_object = json.load(jsonFile)
-    '''
     for i in json_object:
         print(i, json_object[i])
     while not Login() :
         print('login again')
-    '''
     while not BuyTicket() :
         print('buy again')
     print('Exit\n\n\n')
-    driver.quit()
+    #driver.quit()
     break
