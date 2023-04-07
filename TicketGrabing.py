@@ -36,7 +36,7 @@ def test():
         (By.XPATH, '//*[@id="TBL"]/tbody')))
     rows = driver.find_elements(
         By.XPATH, '//*[@id="TBL"]/tbody/tr')
-    needSeat = 8
+    needSeat = 4
     tempSeat = []
     seats = []
     for row in rows:
@@ -67,6 +67,10 @@ def test():
                 print("----------------------")
                 for t in tempSeat:
                     print(f"{t.get_attribute('title')} ")
+                preRow = ""
+                preNumber = ""
+                tempSeat = []
+                ConsecutiveSeats = 1
         else:
             preRow = rowNumber
             preNumber = Number
