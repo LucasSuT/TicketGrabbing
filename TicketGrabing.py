@@ -79,6 +79,54 @@ def test():
             tempSeat.append(seat)
             ConsecutiveSeats = 1
 
+def test2(need_seat):
+    wait = WebDriverWait(driver, 5)
+    wait.until(EC.presence_of_element_located(
+        (By.XPATH, '//*[@id="TBL"]/tbody')))
+    rows = driver.find_elements(
+        By.XPATH, '//*[@id="TBL"]/tbody/tr')
+    tempSeat = []
+    seats = []
+    for row in rows:
+        colums = row.find_elements(By.TAG_NAME, 'td')
+        for colum in colums:
+            if colum.get_attribute('title'):
+                seats.append(colum)
+    seats.sort(key=lambda x: x.get_attribute('title'))
+    for seat in seats:
+        print(f"{seat.get_attribute('title')} ")
+    preRow = ""
+    preNumber = ""
+    ConsecutiveSeats = 1
+    for seat in seats:
+        next = seat.get_attribute('title')
+        tempSeat.append(seat)
+        rowStartIndex = next.index("-")
+        rowEndIndex = next.index("排")
+        rowNumber = next[rowStartIndex+1:rowEndIndex]
+        numberStartIndex = next.rindex("-")
+        numberEndIndex = next.rindex("號")
+        Number = next[numberStartIndex+1:numberEndIndex]
+        # print(next)
+        if preRow == rowNumber and int(preNumber) + 1 == int(Number):
+            ConsecutiveSeats += 1
+            preNumber = Number
+            if need_seat == ConsecutiveSeats:
+                print("----------------------")
+                for t in tempSeat:
+                    print(f"{t.get_attribute('title')} ")
+                preRow = ""
+                preNumber = ""
+                tempSeat = []
+                ConsecutiveSeats = 1
+        else:
+            preRow = rowNumber
+            preNumber = Number
+            tempSeat = []
+            tempSeat.append(seat)
+            ConsecutiveSeats = 1
+
+
 def BuyTicket():
     # avoid over loading
     driver.execute_script("window.stop()")
@@ -93,13 +141,15 @@ def BuyTicket():
         wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')))
         rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr') #抓取所有可選擇區
-        #print(len(rows))
+        print(len(rows))
         for row in rows :
+            print(row)
             colums = row.find_elements(By.TAG_NAME, 'td')
             if CheckAreaAvailable(json_object["area"],colums):
-                print("click")
                 row.click()
-                SelectSeat()
+                test2(4)
+                driver.back()
+            print(row)
     except:
         print('Buy Fail\n\n\n\n\n\n')
         return 1
@@ -198,10 +248,10 @@ driver = webdriver.Chrome(options=options)
 while 1:
     jsonFile = open('config.json','r')
     json_object = json.load(jsonFile)
-    for i in json_object:
-        print(i, json_object[i])
-    while not Login() :
-        print('login again')
+    # for i in json_object:
+    #     print(i, json_object[i])
+    # while not Login() :
+    #     print('login again')
     while not BuyTicket() :
         print('buy again')
     print('Exit\n\n\n')
