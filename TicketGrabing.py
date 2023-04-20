@@ -25,63 +25,12 @@ option.add_argument('lang=zh_CN.UTF-8')
 driver =webdriver.Chrome(options=option)
 '''
 
-
-def test():
-    driver.get('https://google.com')
-    driver.get(
-        'https://tix.fubonbraves.com/UTK0205_?PERFORMANCE_ID=P00KS5VK&GROUP_ID=40&PERFORMANCE_PRICE_AREA_ID=P00KSHKR')
-    wait = WebDriverWait(driver, 5)
-    wait.until(EC.presence_of_element_located(
-        (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
-    wait.until(EC.presence_of_element_located(
-        (By.XPATH, '//*[@id="TBL"]/tbody')))
-    rows = driver.find_elements(
-        By.XPATH, '//*[@id="TBL"]/tbody/tr')
-    needSeat = 4
-    tempSeat = []
-    seats = []
-    for row in rows:
-        colums = row.find_elements(By.TAG_NAME, 'td')
-        for colum in colums:
-            if colum.get_attribute('title'):
-                seats.append(colum)
-    seats.sort(key=lambda x: x.get_attribute('title'))
-    for seat in seats:
-        print(f"{seat.get_attribute('title')} ")
-    preRow = ""
-    preNumber = ""
-    ConsecutiveSeats = 1
-    for seat in seats:
-        next = seat.get_attribute('title')
-        tempSeat.append(seat)
-        rowStartIndex = next.index("-")
-        rowEndIndex = next.index("排")
-        rowNumber = next[rowStartIndex+1:rowEndIndex]
-        numberStartIndex = next.rindex("-")
-        numberEndIndex = next.rindex("號")
-        Number = next[numberStartIndex+1:numberEndIndex]
-        # print(next)
-        if preRow == rowNumber and int(preNumber) + 1 == int(Number):
-            ConsecutiveSeats += 1
-            preNumber = Number
-            if needSeat == ConsecutiveSeats:
-                print("----------------------")
-                for t in tempSeat:
-                    print(f"{t.get_attribute('title')} ")
-                preRow = ""
-                preNumber = ""
-                tempSeat = []
-                ConsecutiveSeats = 1
-        else:
-            preRow = rowNumber
-            preNumber = Number
-            tempSeat = []
-            tempSeat.append(seat)
-            ConsecutiveSeats = 1
-
 def test2(need_seat):
     wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located(
+        (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
+    wait = WebDriverWait(driver, 5)
+    wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="TBL"]/tbody')))
     rows = driver.find_elements(
         By.XPATH, '//*[@id="TBL"]/tbody/tr')
@@ -93,8 +42,8 @@ def test2(need_seat):
             if colum.get_attribute('title'):
                 seats.append(colum)
     seats.sort(key=lambda x: x.get_attribute('title'))
-    for seat in seats:
-        print(f"{seat.get_attribute('title')} ")
+    # for seat in seats:
+    #     print(f"{seat.get_attribute('title')} ")
     preRow = ""
     preNumber = ""
     ConsecutiveSeats = 1
@@ -115,6 +64,7 @@ def test2(need_seat):
                 print("----------------------")
                 for t in tempSeat:
                     print(f"{t.get_attribute('title')} ")
+                    driver.execute_script("arguments[0].click();", t)
                 preRow = ""
                 preNumber = ""
                 tempSeat = []
@@ -125,6 +75,7 @@ def test2(need_seat):
             tempSeat = []
             tempSeat.append(seat)
             ConsecutiveSeats = 1
+    # driver.back()
 
 
 def BuyTicket():
@@ -134,22 +85,33 @@ def BuyTicket():
     driver.get('https://tix.fubonbraves.com/UTK0101_')
     try:
         wait = WebDriverWait(driver, 5)
-        wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="calendar"]/table/tbody/tr[5]/td[6]/a/span[1]/img'))).click() #日歷選擇
+        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[5]/div[1]/div[1]/div[2]/table/tbody/tr[5]/td[7]/a/span[1]/img'))).click() #日歷選擇
         wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
-        #抓取所有可選擇區
-        wait = WebDriverWait(driver, 5)
-        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')))
-        rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr') #抓取所有可選擇區
-        print(len(rows))
-        for row in rows :
-            print(row)
-            colums = row.find_elements(By.TAG_NAME, 'td')
-            if CheckAreaAvailable(json_object["area"],colums):
-                row.click()
-                test2(4)
-                driver.back()
-            print(row)
+        areas = json_object["area"]
+        while(1) :
+            if(len(areas) == 0):break
+            refresh_flag = 0 #refresh_flag判斷有沒有刷新頁面過
+            #抓取所有可選擇區
+            wait = WebDriverWait(driver, 5)
+            wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')))
+            rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr') #抓取所有可選擇區
+            del rows[0]
+            for row in rows :
+                area_index = 0
+                colums = row.find_elements(By.TAG_NAME, 'td')
+                for area in areas :
+                    if area in colums[1].text :
+                        if CheckAreaAvailable(json_object["area"],colums):
+                            row.click()
+                            test2(4)
+                            driver.refresh()
+                            refresh_flag = 1 
+                        del areas[area_index]
+                        break
+                    area_index = area_index + 1
+                if(refresh_flag ==1): #有刷新頁面會導致rows資料不正確需要重新抓取
+                    break
     except:
         print('Buy Fail\n\n\n\n\n\n')
         return 1
