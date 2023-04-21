@@ -49,7 +49,7 @@ def SelectSeats(need_seat):
     ConsecutiveSeats = 1
     buy_seat = 0
     for seat in seats:
-        if buy_seat >=4 : break
+        if buy_seat >=need_seat : break
         next = seat.get_attribute('title')
         tempSeat.append(seat)
         rowStartIndex = next.index("-")
@@ -80,7 +80,6 @@ def SelectSeats(need_seat):
             ConsecutiveSeats = 1
     verify = driver.find_element('xpath', '//*[@id="CHK"]')
     while(buy_seat>0):
-        ClickDialog()
         DownLoadVerifyCode('//*[@id="chk_pic"]')
         verify.clear()
         verify.send_keys(DecodeVerifyCode())
@@ -94,15 +93,16 @@ def SelectSeats(need_seat):
     return buy_seat
 
 
-def BuyTicket(num_ticket):
+def BuyTicket(url,num_ticket):
     # avoid over loading
     driver.execute_script("window.stop()")
-    driver.get('https://google.com')
-    driver.get('https://tix.fubonbraves.com/UTK0101_')
+    # driver.get('https://google.com')
+    # driver.get('https://tix.fubonbraves.com/UTK0101_')
+    driver.get(url)
     wait = WebDriverWait(driver, 5)
     try:
-        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[5]/div[1]/div[1]/div[2]/table/tbody/tr[5]/td[7]/a/span[1]/img'))).click() #日歷選擇
-        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
+        # wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[5]/div[1]/div[1]/div[2]/table/tbody/tr[5]/td[7]/a/span[1]/img'))).click() #日歷選擇
+        # wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
         areas = json_object["area"]
         buy_seat = 0
         while(1) :
@@ -194,11 +194,15 @@ def ClickDialog():
     return 0
 
 def CheckBuyVerifyCode():
-    wait = WebDriverWait(driver, 1)
-    message = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'ui-dialog-content'))).text
-    if '結帳' in message:
+    try:
+        wait = WebDriverWait(driver, 1)
+        message = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'ui-dialog-content'))).text
+        print('start ',message,' end')
+        if '結帳' not in message:
+            return 0
+    except:  # cant capture alert represent verify success
         return 1
-    return 0
+    return 1
 
 def DecodeVerifyCode():
     ocr = ddddocr.DdddOcr()
@@ -230,7 +234,7 @@ while 1:
     #     print(i, json_object[i])
     while not Login() :
         print('login again')
-    while not BuyTicket(2) :
+    while not BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2) :
         print('buy again')
     print('Exit\n\n\n')
     #driver.quit()
