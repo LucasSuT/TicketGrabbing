@@ -26,6 +26,7 @@ driver =webdriver.Chrome(options=option)
 '''
 
 def test2(need_seat):
+    if(need_seat>4):return 0
     wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located(
         (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
@@ -47,7 +48,9 @@ def test2(need_seat):
     preRow = ""
     preNumber = ""
     ConsecutiveSeats = 1
+    buy_seat = 0
     for seat in seats:
+        if buy_seat >=4 : break
         next = seat.get_attribute('title')
         tempSeat.append(seat)
         rowStartIndex = next.index("-")
@@ -61,10 +64,11 @@ def test2(need_seat):
             ConsecutiveSeats += 1
             preNumber = Number
             if need_seat == ConsecutiveSeats:
-                print("----------------------")
+                # print("----------------------")
                 for t in tempSeat:
-                    print(f"{t.get_attribute('title')} ")
+                    # print(f"{t.get_attribute('title')} ")
                     driver.execute_script("arguments[0].click();", t)
+                buy_seat += ConsecutiveSeats
                 preRow = ""
                 preNumber = ""
                 tempSeat = []
@@ -75,7 +79,20 @@ def test2(need_seat):
             tempSeat = []
             tempSeat.append(seat)
             ConsecutiveSeats = 1
-    # driver.back()
+    verify = driver.find_element('xpath', '//*[@id="CHK"]')
+    while(buy_seat>0):
+        ClickDialog()
+        DownLoadVerifyCode('//*[@id="chk_pic"]')
+        verify.clear()
+        verify.send_keys(DecodeVerifyCode())
+        # verify.send_keys('tet')
+        wait = WebDriverWait(driver, 5)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, '//*[@id="addcart"]'))).click()
+        if CheckBuyVerifyCode() :
+            break
+    driver.back()
+    return buy_seat
 
 
 def BuyTicket():
@@ -89,8 +106,9 @@ def BuyTicket():
         wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
         areas = json_object["area"]
+        buy_seat = 0
         while(1) :
-            if(len(areas) == 0):break
+            if(len(areas) == 0 or buy_seat>=4):break
             refresh_flag = 0 #refresh_flag判斷有沒有刷新頁面過
             #抓取所有可選擇區
             wait = WebDriverWait(driver, 5)
@@ -104,7 +122,8 @@ def BuyTicket():
                     if area in colums[1].text :
                         if CheckAreaAvailable(json_object["area"],colums):
                             row.click()
-                            test2(4)
+                            buy_seat += test2(2)
+                            print('Buy ',buy_seat,' Tickets')
                             driver.refresh()
                             refresh_flag = 1 
                         del areas[area_index]
@@ -114,7 +133,7 @@ def BuyTicket():
                     break
     except:
         print('Buy Fail\n\n\n\n\n\n')
-        return 1
+        return 0
     return 1
 
 def SelectSeat():
@@ -146,13 +165,13 @@ def Login():
         password.clear()
         password.send_keys(json_object['password'])
         verify = driver.find_element('xpath', '//*[@id="MASTER_CHK"]')
-        DownLoadVerifyCode()
+        DownLoadVerifyCode('//*[@id="master_chk_pic"]')
         verify.clear()
         verify.send_keys(DecodeVerifyCode())
         # verify.send_keys('test')
         wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, '//*[@id="popupuser"]/div/div[2]/div[3]/button[3]'))).click()
+            (By.XPATH, '//*[@id="popupuser"]/div/div[2]/div[3]/button[2]'))).click()
         if not CheckVerifyCode():
             print('verify fail')
             return 0
@@ -183,6 +202,21 @@ def CheckVerifyCode():
         return 1
     return 0
 
+def ClickDialog():
+    try:
+        wait = WebDriverWait(driver, 1)
+        wait.until(EC.presence_of_element_located(
+            (By.CLASS_NAME, 'ui-button'))).click()
+    except:  # cant capture alert represent verify success
+        return 1
+    return 0
+
+def CheckBuyVerifyCode():
+    wait = WebDriverWait(driver, 1)
+    message = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'ui-dialog-content'))).text
+    if '結帳' in message:
+        return 1
+    return 0
 
 def DecodeVerifyCode():
     ocr = ddddocr.DdddOcr()
@@ -192,14 +226,14 @@ def DecodeVerifyCode():
     return res
 
 
-def DownLoadVerifyCode():
+def DownLoadVerifyCode(xpath):
     img_base64 = driver.execute_script("""
     var ele = arguments[0];
     var cnv = document.createElement('canvas');
     cnv.width = ele.width; cnv.height = ele.height;
     cnv.getContext('2d').drawImage(ele, 0, 0);
     return cnv.toDataURL('image/jpeg').substring(22);
-    """, driver.find_element('xpath', '//*[@id="master_chk_pic"]'))
+    """, driver.find_element('xpath', xpath))
     with open("captcha_login.png", 'wb') as image:
         image.write(base64.b64decode(img_base64))
 
@@ -212,8 +246,8 @@ while 1:
     json_object = json.load(jsonFile)
     # for i in json_object:
     #     print(i, json_object[i])
-    # while not Login() :
-    #     print('login again')
+    while not Login() :
+        print('login again')
     while not BuyTicket() :
         print('buy again')
     print('Exit\n\n\n')
