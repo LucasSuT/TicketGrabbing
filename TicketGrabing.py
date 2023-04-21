@@ -25,12 +25,11 @@ option.add_argument('lang=zh_CN.UTF-8')
 driver =webdriver.Chrome(options=option)
 '''
 
-def test2(need_seat):
+def SelectSeats(need_seat):
     if(need_seat>4):return 0
     wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located(
         (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
-    wait = WebDriverWait(driver, 5)
     wait.until(EC.presence_of_element_located(
         (By.XPATH, '//*[@id="TBL"]/tbody')))
     rows = driver.find_elements(
@@ -95,15 +94,14 @@ def test2(need_seat):
     return buy_seat
 
 
-def BuyTicket():
+def BuyTicket(num_ticket):
     # avoid over loading
     driver.execute_script("window.stop()")
     driver.get('https://google.com')
     driver.get('https://tix.fubonbraves.com/UTK0101_')
+    wait = WebDriverWait(driver, 5)
     try:
-        wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[5]/div[1]/div[1]/div[2]/table/tbody/tr[5]/td[7]/a/span[1]/img'))).click() #日歷選擇
-        wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
         areas = json_object["area"]
         buy_seat = 0
@@ -111,7 +109,6 @@ def BuyTicket():
             if(len(areas) == 0 or buy_seat>=4):break
             refresh_flag = 0 #refresh_flag判斷有沒有刷新頁面過
             #抓取所有可選擇區
-            wait = WebDriverWait(driver, 5)
             wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr')))
             rows = driver.find_elements(By.XPATH, '/html/body/div[5]/div[4]/div[2]/div/div[3]/div/div/table/tbody/tr') #抓取所有可選擇區
             del rows[0]
@@ -122,7 +119,7 @@ def BuyTicket():
                     if area in colums[1].text :
                         if CheckAreaAvailable(json_object["area"],colums):
                             row.click()
-                            buy_seat += test2(2)
+                            buy_seat += SelectSeats(num_ticket)
                             print('Buy ',buy_seat,' Tickets')
                             driver.refresh()
                             refresh_flag = 1 
@@ -135,21 +132,6 @@ def BuyTicket():
         print('Buy Fail\n\n\n\n\n\n')
         return 0
     return 1
-
-def SelectSeat():
-    # wait = WebDriverWait(driver, 5)
-    # wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="TBL"]/tbody')))
-    # rows = driver.find_elements(By.XPATH, '//*[@id="TBL"]/tbody/tr') #抓取每排座位
-    # print(len(rows))
-    # driver.back()
-    wait = WebDriverWait(driver, 5)
-    element = wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
-    wait = WebDriverWait(driver, 5)
-    element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="TBL"]/tbody/tr[2]/td[1]')))
-    driver.execute_script("arguments[0].click();", element)
-    print(element)
-    print(element.get_attribute('title'))
-    input("ddddddd")
 
 def Login():
     driver.execute_script("window.stop()")
@@ -248,7 +230,7 @@ while 1:
     #     print(i, json_object[i])
     while not Login() :
         print('login again')
-    while not BuyTicket() :
+    while not BuyTicket(2) :
         print('buy again')
     print('Exit\n\n\n')
     #driver.quit()
