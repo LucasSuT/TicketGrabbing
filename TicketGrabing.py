@@ -279,6 +279,6 @@ while 1:
     # BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2)
     # print('Exit\n\n\n')
     # time.sleep(15)
+    # driver.quit()
 
-    driver.quit()
     break
