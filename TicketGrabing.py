@@ -42,8 +42,13 @@ def SelectSeats(need_seat,range):
     for row in rows:
         colums = row.find_elements(By.TAG_NAME, 'td')
         for colum in colums:
-            if colum.get_attribute('title'):
-                seats.append(colum)
+            title = colum.get_attribute('title')
+            if title:
+                letter,rowNumber,Number = split_seat(title)
+                if len(range) <=2 :
+                    if Number >= range[0] and Number <= range[1]:seats.append(colum)
+                else :
+                    seats.append(colum)
     print("掃描title執行時間：%.2f 秒" % (time.time() - start_time))
     start_time = time.time()
     seats = sorted(seats, key=seat_key)
@@ -59,12 +64,13 @@ def SelectSeats(need_seat,range):
         if buy_seat >=need_seat : break
         next = seat.get_attribute('title')
         tempSeat.append(seat)
-        rowStartIndex = next.index("-")
-        rowEndIndex = next.index("排")
-        rowNumber = next[rowStartIndex+1:rowEndIndex]
-        numberStartIndex = next.rindex("-")
-        numberEndIndex = next.rindex("號")
-        Number = next[numberStartIndex+1:numberEndIndex]
+        # rowStartIndex = next.index("-")
+        # rowEndIndex = next.index("排")
+        # rowNumber = next[rowStartIndex+1:rowEndIndex]
+        # numberStartIndex = next.rindex("-")
+        # numberEndIndex = next.rindex("號")
+        # Number = next[numberStartIndex+1:numberEndIndex]
+        letter,rowNumber,Number = split_seat(next)
         # print(next)
         if preRow == rowNumber and int(preNumber) + 1 == int(Number):
             ConsecutiveSeats += 1
@@ -232,10 +238,6 @@ def DownLoadVerifyCode(xpath):
     with open("captcha_login.png", 'wb') as image:
         image.write(base64.b64decode(img_base64))
 
-options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
-options.add_argument('--ignore-ssl-errors')
-driver = webdriver.Chrome(options=options)
 def seat_key(seat):
     # 將座位號拆分成排數、字母、號碼
     row, letter, number = seat.get_attribute('title').split('-')
@@ -248,23 +250,35 @@ def seat_key(seat):
     number_num = int(number.split('號')[0])
     return (letter_num,number_num)
 
-while 1:
-    # jsonFile = open('config.json','r')
-    # json_object = json.load(jsonFile)
-    # # for i in json_object:
-    # #     print(i, json_object[i])
-    # # print(json_object['range']['A2'])
-    # while not Login() :
-    #     print('login again')
-    # while not BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2) :
-    #     print('buy again')
-    # print('Exit\n\n\n')
+def split_seat(seat):
+    letter,row,number = seat.split('-')
+    letter = letter.split('區')[0]
+    row = row.split('排')[0]
+    number = number.split('號')[0]
+    return letter,row,number
 
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
+driver = webdriver.Chrome(options=options)
+while 1:
     jsonFile = open('config.json','r')
     json_object = json.load(jsonFile)
-    Login()
-    BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2)
+    # for i in json_object:
+    #     print(i, json_object[i])
+    # print(json_object['range']['A2'])
+    while not Login() :
+        print('login again')
+    while not BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2) :
+        print('buy again')
     print('Exit\n\n\n')
-    time.sleep(15)
+
+    # jsonFile = open('config.json','r')
+    # json_object = json.load(jsonFile)
+    # Login()
+    # BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2)
+    # print('Exit\n\n\n')
+    # time.sleep(15)
+
     driver.quit()
     break
