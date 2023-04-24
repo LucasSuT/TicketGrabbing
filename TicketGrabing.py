@@ -269,7 +269,7 @@ while 1:
     # print(json_object['range']['A2'])
     while not Login() :
         print('login again')
-    while not BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2) :
+    while not BuyTicket(json_object['url'],2) :
         print('buy again')
     print('Exit\n\n\n')
 
