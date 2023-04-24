@@ -63,6 +63,7 @@ def SelectSeats(need_seat,range):
     for seat in seats:
         if buy_seat >=need_seat : break
         next = seat.get_attribute('title')
+        letter,rowNumber,Number = split_seat(next)
         tempSeat.append(seat)
         # rowStartIndex = next.index("-")
         # rowEndIndex = next.index("排")
@@ -72,7 +73,13 @@ def SelectSeats(need_seat,range):
         # Number = next[numberStartIndex+1:numberEndIndex]
         letter,rowNumber,Number = split_seat(next)
         # print(next)
-        if preRow == rowNumber and int(preNumber) + 1 == int(Number):
+        if (letter == 'B1' or letter == 'B2') and  int(preNumber) == 16:
+            preRow = rowNumber
+            preNumber = Number
+            tempSeat = []
+            tempSeat.append(seat)
+            ConsecutiveSeats = 1
+        else if preRow == rowNumber and int(preNumber) + 1 == int(Number):
             ConsecutiveSeats += 1
             preNumber = Number
             if need_seat == ConsecutiveSeats:
