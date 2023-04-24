@@ -89,6 +89,7 @@ def SelectSeats(need_seat):
             (By.XPATH, '//*[@id="addcart"]'))).click()
         if CheckBuyVerifyCode() :
             break
+        ClickDialog()
     driver.back()
     return buy_seat
 
@@ -213,6 +214,9 @@ def DecodeVerifyCode():
 
 
 def DownLoadVerifyCode(xpath):
+    wait = WebDriverWait(driver, 5)
+    wait.until(EC.presence_of_element_located(
+            (By.XPATH, xpath)))
     img_base64 = driver.execute_script("""
     var ele = arguments[0];
     var cnv = document.createElement('canvas');
