@@ -1,6 +1,6 @@
 # TicketGrabbing Project
 ###Follow below steps to execute TicketGrabbing:
-1. Download the latest version for Windows Python 
+1. Download the Python version <= python3.9 for Windows Python 
 https://www.python.org/downloads/
 2. Download the chromedriver according to your chrome browser version
 https://chromedriver.chromium.org/downloads
