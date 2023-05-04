@@ -104,7 +104,6 @@ def SelectSeats(need_seat,range):
         if CheckBuyVerifyCode() :
             break
         ClickDialog()
-    driver.back()
     return buy_seat
 
 
@@ -117,7 +116,7 @@ def BuyTicket(url,num_ticket):
     wait = WebDriverWait(driver, 5)
     try:
         # wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[5]/div[1]/div[1]/div[2]/table/tbody/tr[5]/td[7]/a/span[1]/img'))).click() #日歷選擇
-        # wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
+        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
         areas = json_object["area"]
         buy_seat = 0
         while(1) :
@@ -135,9 +134,11 @@ def BuyTicket(url,num_ticket):
                         if CheckAreaAvailable(area,colums):
                             row.click()
                             buy_seat += SelectSeats(num_ticket,json_object["range"][area])
-                            print('Buy ',buy_seat,' Tickets')
-                            driver.refresh()
                             refresh_flag = 1 
+                            print('Buy ',buy_seat,' Tickets')
+                            if(len(areas) == 0 or buy_seat>=4):break
+                            driver.back()
+                            driver.refresh()
                         del areas[area_index]
                         break
                     area_index = area_index + 1
@@ -279,6 +280,6 @@ while 1:
     # BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2)
     # print('Exit\n\n\n')
     # time.sleep(15)
-    # driver.quit()
-
+    input('press any key to exit...')
+    driver.quit()
     break
