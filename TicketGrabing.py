@@ -27,85 +27,86 @@ driver =webdriver.Chrome(options=option)
 '''
 
 def SelectSeats(need_seat,range):
-    if(need_seat>4):return 0
-    print("range = ",range)
-    wait = WebDriverWait(driver, 5)
-    wait.until(EC.presence_of_element_located(
-        (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
-    wait.until(EC.presence_of_element_located(
-        (By.XPATH, '//*[@id="TBL"]/tbody')))
-    rows = driver.find_elements(
-        By.XPATH, '//*[@id="TBL"]/tbody/tr')
-    tempSeat = []
-    seats = []
-    start_time = time.time()
-    for row in rows:
-        colums = row.find_elements(By.TAG_NAME, 'td')
-        for colum in colums:
-            title = colum.get_attribute('title')
-            if title:
-                letter,rowNumber,Number = split_seat(title)
-                if len(range) <=2 :
-                    if Number >= range[0] and Number <= range[1]:seats.append(colum)
-                else :
-                    seats.append(colum)
-    print("掃描title執行時間：%.2f 秒" % (time.time() - start_time))
-    start_time = time.time()
-    seats = sorted(seats, key=seat_key)
-    print("sort title執行時間：%.2f 秒" % (time.time() - start_time))
-    # for seat in seats:
-    #     print(f"{seat.get_attribute('title')} ")
-    preRow = ""
-    preNumber = ""
-    ConsecutiveSeats = 1
-    buy_seat = 0
-    start_time = time.time()
-    for seat in seats:
-        if buy_seat >=need_seat : break
-        next = seat.get_attribute('title')
-        tempSeat.append(seat)
-        # rowStartIndex = next.index("-")
-        # rowEndIndex = next.index("排")
-        # rowNumber = next[rowStartIndex+1:rowEndIndex]
-        # numberStartIndex = next.rindex("-")
-        # numberEndIndex = next.rindex("號")
-        # Number = next[numberStartIndex+1:numberEndIndex]
-        letter,rowNumber,Number = split_seat(next)
-        # print(next)
-        if preRow == rowNumber and int(preNumber) + 1 == int(Number):
-            ConsecutiveSeats += 1
-            preNumber = Number
-            if need_seat == ConsecutiveSeats:
-                # print("----------------------")
-                for t in tempSeat:
-                    # print(f"{t.get_attribute('title')} ")
-                    driver.execute_script("arguments[0].click();", t)
-                buy_seat += ConsecutiveSeats
-                preRow = ""
-                preNumber = ""
-                tempSeat = []
-                ConsecutiveSeats = 1
-        else:
-            preRow = rowNumber
-            preNumber = Number
-            tempSeat = []
-            tempSeat.append(seat)
-            ConsecutiveSeats = 1
-    verify = driver.find_element('xpath', '//*[@id="CHK"]')
-    print("選擇執行時間：%.2f 秒" % (time.time() - start_time))
-    while(buy_seat>0):
-        DownLoadVerifyCode('//*[@id="chk_pic"]')
-        verify.clear()
-        verify.send_keys(DecodeVerifyCode())
-        # verify.send_keys('tet')
+    while 1 :
+        if(need_seat>4):return 0
+        print("range = ",range)
         wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, '//*[@id="addcart"]'))).click()
-        if CheckBuyVerifyCode() :
-            break
-        ClickDialog()
-    driver.back()
-    return buy_seat
+            (By.XPATH, '/html/body/div[9]/div[7]/div[2]/div[3]/div[2]/div/button[2]'))).click()
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, '//*[@id="TBL"]/tbody')))
+        rows = driver.find_elements(
+            By.XPATH, '//*[@id="TBL"]/tbody/tr')
+        tempSeat = []
+        seats = []
+        start_time = time.time()
+        for row in rows:
+            colums = row.find_elements(By.TAG_NAME, 'td')
+            for colum in colums:
+                title = colum.get_attribute('title')
+                if title:
+                    letter,rowNumber,Number = split_seat(title)
+                    if len(range) <=2 :
+                        if Number >= range[0] and Number <= range[1]:seats.append(colum)
+                    else :
+                        seats.append(colum)
+        print("掃描title執行時間：%.2f 秒" % (time.time() - start_time))
+        start_time = time.time()
+        seats = sorted(seats, key=seat_key)
+        print("sort title執行時間：%.2f 秒" % (time.time() - start_time))
+        # for seat in seats:
+        #     print(f"{seat.get_attribute('title')} ")
+        preRow = ""
+        preNumber = ""
+        ConsecutiveSeats = 1
+        buy_seat = 0
+        start_time = time.time()
+        for seat in seats:
+            if buy_seat >=need_seat : break
+            next = seat.get_attribute('title')
+            tempSeat.append(seat)
+            # rowStartIndex = next.index("-")
+            # rowEndIndex = next.index("排")
+            # rowNumber = next[rowStartIndex+1:rowEndIndex]
+            # numberStartIndex = next.rindex("-")
+            # numberEndIndex = next.rindex("號")
+            # Number = next[numberStartIndex+1:numberEndIndex]
+            letter,rowNumber,Number = split_seat(next)
+            # print(next)
+            if preRow == rowNumber and int(preNumber) + 1 == int(Number):
+                ConsecutiveSeats += 1
+                preNumber = Number
+                if need_seat == ConsecutiveSeats:
+                    # print("----------------------")
+                    for t in tempSeat:
+                        # print(f"{t.get_attribute('title')} ")
+                        driver.execute_script("arguments[0].click();", t)
+                    buy_seat += ConsecutiveSeats
+                    preRow = ""
+                    preNumber = ""
+                    tempSeat = []
+                    ConsecutiveSeats = 1
+            else:
+                preRow = rowNumber
+                preNumber = Number
+                tempSeat = []
+                tempSeat.append(seat)
+                ConsecutiveSeats = 1
+        verify = driver.find_element('xpath', '//*[@id="CHK"]')
+        print("選擇執行時間：%.2f 秒" % (time.time() - start_time))
+        if(buy_seat>0):
+            DownLoadVerifyCode('//*[@id="chk_pic"]')
+            verify.clear()
+            verify.send_keys(DecodeVerifyCode())
+            # verify.send_keys('tet')
+            wait = WebDriverWait(driver, 5)
+            wait.until(EC.presence_of_element_located(
+                (By.XPATH, '//*[@id="addcart"]'))).click()
+            if CheckBuyVerifyCode() :
+                return buy_seat
+            ClickDialog()
+        else :
+            return 0
 
 
 def BuyTicket(url,num_ticket):
@@ -117,7 +118,7 @@ def BuyTicket(url,num_ticket):
     wait = WebDriverWait(driver, 5)
     try:
         # wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div[5]/div[1]/div[1]/div[2]/table/tbody/tr[5]/td[7]/a/span[1]/img'))).click() #日歷選擇
-        # wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
+        wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[6]/div[7]/app-table[1]/div/table/tbody/tr[2]/td[5]/button'))).click() #購買button
         areas = json_object["area"]
         buy_seat = 0
         while(1) :
@@ -135,9 +136,11 @@ def BuyTicket(url,num_ticket):
                         if CheckAreaAvailable(area,colums):
                             row.click()
                             buy_seat += SelectSeats(num_ticket,json_object["range"][area])
-                            print('Buy ',buy_seat,' Tickets')
-                            driver.refresh()
                             refresh_flag = 1 
+                            print('Buy ',buy_seat,' Tickets')
+                            if(len(areas) == 0 or buy_seat>=4):break
+                            driver.back()
+                            driver.refresh()
                         del areas[area_index]
                         break
                     area_index = area_index + 1
@@ -279,6 +282,6 @@ while 1:
     # BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2)
     # print('Exit\n\n\n')
     # time.sleep(15)
-    # driver.quit()
-
+    input('press any key to exit...')
+    driver.quit()
     break
