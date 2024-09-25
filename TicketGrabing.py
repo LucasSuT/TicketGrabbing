@@ -260,28 +260,90 @@ def split_seat(seat):
     number = number.split('號')[0]
     return letter,row,number
 
+def LoginTC():
+    driver.execute_script("window.stop()")
+    driver.get(json_object['url_TC']) #to TC home page
+    driver.add_cookie({'name': 'SID', 'value': json_object['SID']}) #Add cockie for gmail info
+    try:
+        wait = WebDriverWait(driver, 5)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, '//*[@id="bs-navbar"]/div/div[2]/ul[3]/li/a'))).click() #member btn
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, '//*[@id="loginGoogle"]'))).click() #gmail login btn
+        wait.until(EC.url_to_be(json_object['url_TC']+'user')) #check login pass
+    except:
+        print(json_object['url_TC']+'user')
+        print(driver.current_url)
+        print('Login except\n\n\n\n\n\n')
+        return 0
+    return 1
+
+def BuyTicketTC():
+    driver.execute_script("window.stop()")
+    driver.get(json_object['url_TC_Buy']) #to ticket page
+
+    try:
+        wait = WebDriverWait(driver, 5)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, '//*[@id="onetrust-accept-btn-handler"]'))).click() #confirm cockie accept
+    except:    
+        print('no cockie accept\n\n\n\n\n\n')
+
+    try:
+        wait = WebDriverWait(driver, 5)
+        wait.until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="tab-func"]/li[1]/a'))) #buy btn
+        driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, '//*[@id="tab-func"]/li[1]/a'))
+        wait.until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="gameList"]/table/tbody/tr/td[4]/button'))) #select session
+        driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, '//*[@id="gameList"]/table/tbody/tr/td[4]/button'))
+        #time.sleep(5)
+        wait = WebDriverWait(driver, 600)
+        wait.until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="group_1"]/li[1]')))
+        element = driver.find_element(By.XPATH, '//*[@id="group_1"]/li[1]')
+        driver.execute_script("arguments[0].scrollIntoView(true);", element) #scroll to element
+        time.sleep(1)
+        wait = WebDriverWait(driver, 5)
+        wait.until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="group_1"]/li[1]'))).click()
+        
+        '''
+        //*[@id="group_0"]/li[1]
+        //*[@id="group_0"]/li[2]
+        //*[@id="group_1"]/li[1]
+        '''
+    except:
+        print('Buy Ticket except\n\n\n\n\n\n')
+        return 0
+    return 1
+
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--ignore-ssl-errors')
 driver = webdriver.Chrome(options=options)
+driver.maximize_window()
+
 while 1:
     jsonFile = open('config.json','r')
     json_object = json.load(jsonFile)
-    # for i in json_object:
-    #     print(i, json_object[i])
-    # print(json_object['range']['A2'])
-    while not Login() :
-        print('login again')
-    while not BuyTicket(json_object['url'],2) :
-        print('buy again')
-    print('Exit\n\n\n')
+    count = 0
+    for i in json_object:
+        print(i, json_object[i])
+    print(json_object['range']['A2'])
 
-    # jsonFile = open('config.json','r')
-    # json_object = json.load(jsonFile)
-    # Login()
-    # BuyTicket('https://tix.fubonbraves.com/UTK0204_?PERFORMANCE_ID=P00KT9QT&PRODUCT_ID=P00JXL75',2)
-    # print('Exit\n\n\n')
-    # time.sleep(15)
+    while not LoginTC() :
+        count+=1
+        if count == 2:
+            break
+        print('loginTC again')
+    count = 0
+    while not BuyTicketTC():
+        count+=1
+        if count == 2:
+            break
+        print('BuyTicketTC again')
+
     input('press any key to exit...')
     driver.quit()
     break
