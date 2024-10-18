@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 import time
 from time import sleep
 import ddddocr
@@ -265,7 +266,7 @@ def LoginTC():
     driver.get(json_object['url_TC']) #to TC home page
     driver.add_cookie({'name': 'SID', 'value': json_object['SID']}) #Add cockie for gmail info
     try:
-        wait = WebDriverWait(driver, 5)
+        wait = WebDriverWait(driver, 60)
         wait.until(EC.element_to_be_clickable(
             (By.XPATH, '//*[@id="bs-navbar"]/div/div[2]/ul[3]/li/a'))).click() #member btn
         wait.until(EC.element_to_be_clickable(
@@ -277,6 +278,76 @@ def LoginTC():
         print('Login except\n\n\n\n\n\n')
         return 0
     return 1
+
+def SelectGroup():
+    for Group in json_object['Group']:
+        print(Group+" ")
+        try:
+            ul_elements = driver.find_elements(By.ID, Group)
+            wait = WebDriverWait(driver, 600)
+            element = wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, '//*[@id="{}"]'.format(Group))))
+            driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            time.sleep(1)
+            ul_elements = element.find_elements(By.TAG_NAME, 'li')
+            for li in ul_elements:
+                if '已售完' in li.text:
+                    print(li.text)
+                    continue
+                if '剩餘' in li.text:
+                    result = li.text.split('剩餘', 1)[1]
+                    if result.isdigit() and int(result) < 4:
+                        print(li.text)
+                        continue
+                print(li.text)
+                li.click()
+                break
+        except:
+            print("SelectGroup error!\n\n")
+    '''try:
+        wait = WebDriverWait(driver, 600)
+        wait.until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="group_1"]/li[1]')))
+        element = driver.find_element(By.XPATH, '//*[@id="group_1"]/li[1]')
+        driver.execute_script("arguments[0].scrollIntoView(true);", element) #scroll to element
+        time.sleep(1)
+        wait = WebDriverWait(driver, 5)
+        wait.until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="group_1"]/li[1]'))).click()
+    except:
+        print("SelectGroup error!\n\n")'''
+
+def FinalPage():
+    try:
+        wait = WebDriverWait(driver, 600)
+        wait.until(EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, '.form-select')))
+        element = driver.find_element(By.CSS_SELECTOR, '.form-select')
+        select = Select(element)
+        select.select_by_value("4")
+        
+        verify = driver.find_element('xpath', '//*[@id="TicketForm_verifyCode"]')
+        DownLoadVerifyCode('//*[@id="TicketForm_verifyCode-image"]')
+        verify.clear()
+        verify.send_keys(DecodeVerifyCode())
+        element = wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, '//*[@id="TicketForm_agree"]')))
+        driver.execute_script("arguments[0].scrollIntoView(true);", element)
+        time.sleep(1)
+        element.click()
+        wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, '//*[@id="form-ticket-ticket"]/div[4]/button[2]'))).click()
+        try:
+            wait.until(EC.alert_is_present())
+            alert = driver.switch_to.alert
+            print(alert.text)  # 输出 alert 的文本
+            time.sleep(1)
+            alert.accept()
+            FinalPage()
+        except:
+            print('Alert not appear!')
+    except: 
+        print('FinalPage Error!')
 
 def BuyTicketTC():
     driver.execute_script("window.stop()")
@@ -290,23 +361,20 @@ def BuyTicketTC():
         print('no cockie accept\n\n\n\n\n\n')
 
     try:
-        wait = WebDriverWait(driver, 5)
+        wait = WebDriverWait(driver, 600)
         wait.until(EC.element_to_be_clickable(
                 (By.XPATH, '//*[@id="tab-func"]/li[1]/a'))) #buy btn
         driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, '//*[@id="tab-func"]/li[1]/a'))
+
+        #time.sleep(2)
+
         wait.until(EC.element_to_be_clickable(
                 (By.XPATH, '//*[@id="gameList"]/table/tbody/tr/td[4]/button'))) #select session
         driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, '//*[@id="gameList"]/table/tbody/tr/td[4]/button'))
+
         #time.sleep(5)
-        wait = WebDriverWait(driver, 600)
-        wait.until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="group_1"]/li[1]')))
-        element = driver.find_element(By.XPATH, '//*[@id="group_1"]/li[1]')
-        driver.execute_script("arguments[0].scrollIntoView(true);", element) #scroll to element
-        time.sleep(1)
-        wait = WebDriverWait(driver, 5)
-        wait.until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="group_1"]/li[1]'))).click()
+        SelectGroup()
+        FinalPage()
         
         '''
         //*[@id="group_0"]/li[1]
